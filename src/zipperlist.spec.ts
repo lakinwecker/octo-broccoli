@@ -1,58 +1,82 @@
-import {ZipperList} from "./zipperlist"
+import {ZipperList, zipperList, next, prev, map, filter, toArray, fromArray} from "./zipperlist"
 
 test("Construction should be possible", () => {
-  const z = new ZipperList([], 1, []);
+  const z = zipperList<number>([], 1, []);
   expect(z.cur).toStrictEqual(1);
 })
 
 test("Calling previous when there are no previous must not change current", () => {
-  const z = new ZipperList([], 1, []);
+  let z: ZipperList<number> = zipperList([], 1, []);
   expect(z.cur).toStrictEqual(1);
-  z.gotoPrev();
+  z = prev(z);
   expect(z.cur).toStrictEqual(1);
   expect(z.prev).toStrictEqual([]);
   expect(z.next).toStrictEqual([]);
 })
 
 test("Must be able to traverse: prev (happy path)", () => {
-  const z = new ZipperList([1], 2, []);
+  const z: ZipperList<number> = zipperList([1], 2, []);
   expect(z.cur).toStrictEqual(2);
-  const z2 = z.gotoPrev();
+  const z2 = prev(z);
   console.log(z2.prev);
   console.log(z2.cur);
   console.log(z2.next);
   expect(z2.cur).toStrictEqual(1);
   expect(z2.prev).toStrictEqual([]);
   expect(z2.next).toStrictEqual([2]);
-  const z3 = z2.gotoPrev();
+  const z3 = prev(z2);
   expect(z3.cur).toStrictEqual(1);
   expect(z3.prev).toStrictEqual([]);
   expect(z3.next).toStrictEqual([2]);
 })
 
 test("Must be able to traverse: next", () => {
-  let z = new ZipperList([], 1, [2]);
+  let z: ZipperList<number> = zipperList([], 1, [2]);
   expect(z.cur).toStrictEqual(1);
-  z = z.gotoNext();
+  z = next(z);
   expect(z.cur).toStrictEqual(2);
   expect(z.prev).toStrictEqual([1]);
   expect(z.next).toStrictEqual([]);
-  z = z.gotoNext();
+  z = next(z);
   expect(z.cur).toStrictEqual(2);
   expect(z.prev).toStrictEqual([1]);
   expect(z.next).toStrictEqual([]);
 })
 
-test("Must be able to append", () => {
-  expect(true).toStrictEqual(false);
+test("map!!!", () => {
+  let z: ZipperList<number> = zipperList([], 1, [2]);
+  z = map((x: number) => x*x)(z);
+  expect(z.prev).toStrictEqual([]);
+  expect(z.cur).toStrictEqual(1);
+  expect(z.next).toStrictEqual([4]);
 })
 
-test("Must be remove", () => {
-  expect(true).toStrictEqual(false);
+test("filter", () => {
+  const z: ZipperList<number> = zipperList([], 1, [2]);
+  const z2 = filter((x: number) => x>1)(z);
+  if (z2 === undefined) fail("This filter should still have one item") ;
+  expect(z2.prev).toStrictEqual([]);
+  expect(z2.cur).toStrictEqual(2);
+  expect(z2.next).toStrictEqual([]);
+
+  const z3 = filter((x: number) => x>2)(z);
+  if (z3 !== undefined) fail("This filter should have nothing") ;
 })
 
-test("Change value in current", () => {
-  expect(true).toStrictEqual(false);
+
+test("toArray", () => {
+  const z: ZipperList<number> = zipperList([1], 2, [3]);
+  const z2 = toArray(z);
+  expect(z2).toStrictEqual([1, 2, 3]);
 })
+
+test("fromArray", () => {
+  const z = fromArray([1, 2, 3, 4], 1);
+  if (z === undefined) fail("Should not be undefined");
+  expect(z.prev).toStrictEqual([1]);
+  expect(z.cur).toStrictEqual(2);
+  expect(z.next).toStrictEqual([3, 4]);
+})
+
 
 export {};
