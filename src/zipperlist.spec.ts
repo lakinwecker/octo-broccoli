@@ -1,3 +1,4 @@
+import {isSome, match} from "fp-ts/Option"
 import {ZipperList, zipperList, next, prev, map, filter, toArray, fromArray} from "./zipperlist"
 
 test("Construction should be possible", () => {
@@ -54,13 +55,18 @@ test("map!!!", () => {
 test("filter", () => {
   const z: ZipperList<number> = zipperList([], 1, [2]);
   const z2 = filter((x: number) => x>1)(z);
-  if (z2 === undefined) fail("This filter should still have one item") ;
-  expect(z2.prev).toStrictEqual([]);
-  expect(z2.cur).toStrictEqual(2);
-  expect(z2.next).toStrictEqual([]);
+  match(
+    () => fail("Got an unexpected None"),
+    (z2: ZipperList<number>) => {
+      expect(z2.prev).toStrictEqual([]);
+      expect(z2.cur).toStrictEqual(2);
+      expect(z2.next).toStrictEqual([]);
+
+    }
+  )(z2)
 
   const z3 = filter((x: number) => x>2)(z);
-  if (z3 !== undefined) fail("This filter should have nothing") ;
+  if (isSome(z3)) fail("This filter should have nothing");
 })
 
 
@@ -72,10 +78,14 @@ test("toArray", () => {
 
 test("fromArray", () => {
   const z = fromArray([1, 2, 3, 4], 1);
-  if (z === undefined) fail("Should not be undefined");
-  expect(z.prev).toStrictEqual([1]);
-  expect(z.cur).toStrictEqual(2);
-  expect(z.next).toStrictEqual([3, 4]);
+  match(
+    () => fail("Got an unexpected None"),
+    (z2: ZipperList<number>) => {
+      expect(z2.prev).toStrictEqual([1]);
+      expect(z2.cur).toStrictEqual(2);
+      expect(z2.next).toStrictEqual([3, 4]);
+    }
+  )(z)
 })
 
 
