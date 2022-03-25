@@ -1,3 +1,5 @@
+import {Option, some, none, match} from "fp-ts/Option"
+import {identity} from "fp-ts/function"
 
 // SOLID - Object Oriented 
 //
@@ -18,31 +20,31 @@ export const zipperList = <T>(prev: T[], cur: T, next: T[]) => {
 }
 
 export const toArray = <T>(z: ZipperList<T>): Array<T> => [...z.prev, z.cur, ...z.next];
-export const fromArray = <T>(a: Array<T>, i: number): ZipperList<T> | undefined => {
-  if (a.length === 0) return undefined;
+export const fromArray = <T>(a: Array<T>, i: number): Option<ZipperList<T>> => {
+  if (a.length === 0) return none;
 
   if (i >= a.length) return fromArray(a, a.length-1);
   if (i < 0) return fromArray(a, 0);
 
   const cur = a[i] as T;
-  return {
+  return some({
     prev: a.slice(0, i),
     cur, 
     next: a.slice(i + 1, a.length)
-  }
+  })
 }
 
-export const prev = <T>(z: ZipperList<T>): ZipperList<T> => {
-  const p = fromArray(toArray(z), z.prev.length-1);
-  if (p === undefined) return z;
-  return p;
-}
+const orDefault = <T>(d: ZipperList<T>) =>
+  match<ZipperList<T>, ZipperList<T>>(
+    () => d, // None
+    identity // Contained
+  )
 
-export const next = <T>(z: ZipperList<T>): ZipperList<T> => {
-  const p = fromArray(toArray(z), z.prev.length+1);
-  if (p === undefined) return z;
-  return p;
-}
+export const prev = <T>(z: ZipperList<T>): ZipperList<T> => 
+  orDefault(z)(fromArray(toArray(z), z.prev.length-1));
+
+export const next = <T>(z: ZipperList<T>): ZipperList<T> => 
+  orDefault(z)(fromArray(toArray(z), z.prev.length+1));
 
 export const map = <T, T2>(f: (t: T) => T2) => (z: ZipperList<T>): ZipperList<T2> => {
   return {
@@ -52,8 +54,5 @@ export const map = <T, T2>(f: (t: T) => T2) => (z: ZipperList<T>): ZipperList<T2
   }
 }
 
-export const filter = <T>(f: (t: T) => boolean) => (z: ZipperList<T>): ZipperList<T> | undefined => {
-  const a = toArray(z).filter(f);
-  const i = z.prev.length;
-  return fromArray(a, i);
-}
+export const filter = <T>(f: (t: T) => boolean) => (z: ZipperList<T>): Option<ZipperList<T>> => 
+  fromArray(toArray(z).filter(f), z.prev.length);
